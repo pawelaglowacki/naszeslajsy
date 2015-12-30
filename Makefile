@@ -1,36 +1,24 @@
-__start__: obj ./ant
-	./ant
+__start__: obj ./RSA_Optimization
+	./RSA_Optimization
 
 obj:
 	mkdir -p obj
 
-ant: obj/main.o obj/uni.o obj/pat.o obj/net.o obj/len.o obj/analyzePath.o obj/any.o
-	g++ obj/main.o obj/uni.o obj/pat.o obj/net.o obj/len.o obj/analyzePath.o obj/any.o -o ant
+clean:
+	rm -r obj RSA_Optimization
+
+RSA_Optimization: obj/main.o obj/Network.o obj/NetworkOptimization.o obj/Traffic.o
+	g++ obj/main.o obj/Network.o obj/Traffic.o obj/NetworkOptimization.o -o RSA_Optimization
 
 obj/main.o: main.cpp
-	g++ -Iinclude -Wall -pedantic -c -o obj/main.o main.cpp
+	g++ -Iinclude -Wall -pedantic -std=c++11  -c -o obj/main.o main.cpp
 
-obj/analyzePath.o: src/analyzePath.cpp
-	g++ -Iinclude -Wall -pedantic -c -o obj/analyzePath.o src/analyzePath.cpp
+obj/Traffic.o: src/Traffic.cpp
+	g++ -Iinclude -Wall -pedantic -std=c++11 -c -o obj/Traffic.o src/Traffic.cpp
 
-obj/uni.o: src/uni.cpp
-	g++ -Iinclude -Wall -pedantic -c -o obj/uni.o src/uni.cpp
+obj/NetworkOptimization.o: src/NetworkOptimization.cpp
+	g++ -Iinclude -Wall -pedantic -std=c++11 -c -o obj/NetworkOptimization.o src/NetworkOptimization.cpp
 
-obj/pat.o: src/pat.cpp
-	g++ -Iinclude -Wall -pedantic -c -o obj/pat.o src/pat.cpp
-
-obj/any.o: src/any.cpp
-	g++ -Iinclude -Wall -pedantic -c -o obj/any.o src/any.cpp
-
-obj/net.o: src/net.cpp
-	g++ -Iinclude -Wall -pedantic -std=c++11	-c -o obj/net.o src/net.cpp
-
-obj/len.o: src/len.cpp
-	g++ -Iinclude -Wall -pedantic -c -o obj/len.o src/len.cpp
-
-clean:
-	rm obj/*
-
-main.o: main.cpp
-	g++ -c main.cpp
+obj/Network.o: src/Network.cpp
+	g++ -Iinclude -Wall -pedantic -std=c++11 -c -o obj/Network.o src/Network.cpp
 
