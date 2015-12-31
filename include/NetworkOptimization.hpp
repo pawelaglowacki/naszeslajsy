@@ -3,16 +3,13 @@
 #include <vector>
 #include "Network.hpp"
 #include "Traffic.hpp"
+#include "Definitions.hpp"
 
 class NetworkOptimization
 {
     public:
-        NetworkOptimization(std::string codeNameOfNetworkTopology, 
-                            std::string codeNameOfUnicastDemands,
-                            std::string codeNameOfAnycastDemands,
-                            std::string codeNameOfPaths,
-                            std::string codeNameOfDataCenters);
-        void printPathsWithLinks();
+        NetworkOptimization(CodeName codeName); 
+        void printPathsWithLinks() const;
     private:
         Network network;
         Traffic traffic;

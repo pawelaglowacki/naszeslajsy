@@ -2,24 +2,18 @@
 #include <iostream>
 #include <string>
 using namespace std;
-NetworkOptimization::NetworkOptimization(string codeNameOfNetworkTopology, 
-                                         string codeNameOfUnicastDemands,
-                                         string codeNameOfAnycastDemands,
-                                         string codeNameOfPaths,
-                                         string codeNameOfDataCenters)
+NetworkOptimization::NetworkOptimization(CodeName codeName)
 {
-    string pathToDirWithFiles("data/");
-    network.load(codeNameOfNetworkTopology, codeNameOfPaths, pathToDirWithFiles);
-    traffic.load(codeNameOfUnicastDemands, codeNameOfAnycastDemands,
-                 codeNameOfDataCenters, pathToDirWithFiles);
+    network.load(codeName);
+    traffic.load(codeName);
 }
 
-void NetworkOptimization::printPathsWithLinks()
+void NetworkOptimization::printPathsWithLinks() const
 {
     for (unsigned int i=0; i < network.getAmountOfPaths(); i++)
     {
         cout << "Path " << i << " ";
-        vector <int> &linksOfPath = network.paths[i];
+        const vector <int> &linksOfPath = network.paths[i];
         for (unsigned int j=0; j < linksOfPath.size(); j++)
         {
             int numberOfLink = linksOfPath[j];    

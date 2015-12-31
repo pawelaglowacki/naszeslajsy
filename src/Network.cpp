@@ -4,19 +4,18 @@
 
 using namespace std;
 
-void Network::load(string codeNameOfNetworkTopology, string codeNameOfPaths, string pathToDirWithFiles)
+void Network::load(CodeName codeName)
 {
-    this->codeNameOfNetworkTopology = codeNameOfNetworkTopology;
-    this->codeNameOfPaths = codeNameOfPaths;
-    this->pathToDirWithFiles = pathToDirWithFiles;
+    this->codeName = codeName;
     loadNetworkTopology();
     loadCandidatePaths();
     loadDistancesAndModulationsForPaths();
+    loadDataCenters();
 }
 
 void Network::loadCandidatePaths()
 {
-    string fileName = pathToDirWithFiles + codeNameOfPaths + ".pat";
+    string fileName = pathToDirWithFiles + codeName.ofPaths + ".pat";
     
     ifstream file;
     file.open(fileName.c_str());
@@ -46,7 +45,7 @@ void Network::loadNetworkTopology()
 {
     unsigned int amountOfLinks;
     ifstream file;
-    string fileName = pathToDirWithFiles + codeNameOfNetworkTopology + ".net";
+    string fileName = pathToDirWithFiles + codeName.ofNetworkTopology + ".net";
     file.open(fileName);
     if (!file.is_open()) throw string(fileName + " does not exist");
 
@@ -70,7 +69,6 @@ void Network::loadNetworkTopology()
                 link.distance = distanceOfLink;
                 links[numberOfLink] = link;
                 numberOfLink++; 
-                cout<<"link z "<<i <<" do "<<j<< " nr " << numberOfLink << endl;
             }
         }
     }
@@ -83,7 +81,7 @@ void Network::loadNetworkTopology()
 
 void Network::loadDistancesAndModulationsForPaths()
 {
-    string fileName = pathToDirWithFiles + codeNameOfPaths + ".len";
+    string fileName = pathToDirWithFiles + codeName.ofPaths + ".len";
     ifstream file;
 
     file.open(fileName.c_str());
@@ -108,18 +106,44 @@ void Network::loadDistancesAndModulationsForPaths()
     file.close();
 }
 
-unsigned int Network::getAmountOfLinks()
+void Network::loadDataCenters()
+{
+    string fileName = pathToDirWithFiles + codeName.ofDataCenters + ".rep";
+    ifstream file;
+
+    file.open(fileName.c_str());
+    if (!file.is_open()) throw string(fileName + " does not exist");
+
+    unsigned int numberOfReplicas;
+    file >> numberOfReplicas;
+    
+    for(unsigned int i=0; i<numberOfReplicas; i++)
+    {
+        int node;
+        file >> node;
+        dataCenters[node] = true;
+    }
+
+    file.close();
+     
+}
+
+unsigned int Network::getAmountOfLinks() const
 {
     return links.size();
 }
 
-unsigned int Network::getAmountOfPaths()
+unsigned int Network::getAmountOfPaths() const
 {
     return paths.size();
 }
 
-unsigned int Network::getAmountOfNodes()
+unsigned int Network::getAmountOfNodes() const
 {
     return amountOfNodes;
 }
 
+unsigned int Network::getAmountOfDataCenters() const
+{
+    return dataCenters.size();
+}

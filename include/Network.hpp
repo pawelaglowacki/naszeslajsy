@@ -1,6 +1,8 @@
 #pragma once 
+#include "Definitions.hpp"
 #include <string>
 #include <vector>
+#include <map>
 
 struct Link
 {
@@ -16,15 +18,19 @@ class Network
         std::vector< int > distancesOfPaths;
         std::vector< int > modulationsOfPaths;
         std::vector< Link > links;
+        std::map<int, bool> dataCenters;
 
-        void load(std::string codeNameOfNetworkTopology, std::string codeNameOfPaths, std::string pathToDirWithFiles);
-        unsigned int getAmountOfLinks();
-        unsigned int getAmountOfPaths();
-        unsigned int getAmountOfNodes();
+        void load(CodeName codeName); 
+        unsigned int getAmountOfLinks() const;
+        unsigned int getAmountOfPaths() const;
+        unsigned int getAmountOfNodes() const;
+        unsigned int getAmountOfDataCenters() const;
     private:
-        std::string codeNameOfNetworkTopology, codeNameOfPaths, pathToDirWithFiles;
+        CodeName codeName;
         unsigned int amountOfNodes;
         void loadCandidatePaths();
         void loadNetworkTopology();
         void loadDistancesAndModulationsForPaths();
+        void loadDataCenters();
+        
 };
