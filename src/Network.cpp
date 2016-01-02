@@ -43,7 +43,7 @@ void Network::loadCandidatePaths()
 
 void Network::loadNetworkTopology()
 {
-    unsigned int amountOfLinks;
+    unsigned int amountOfLinks, amountOfNodes;
     ifstream file;
     string fileName = pathToDirWithFiles + codeName.ofNetworkTopology + ".net";
     file.open(fileName);
@@ -77,6 +77,8 @@ void Network::loadNetworkTopology()
     
     if (numberOfLink != amountOfLinks)
         throw string("Different number of links");
+
+    loadContiguousLinksOfNodes(amountOfNodes);
 }
 
 void Network::loadDistancesAndModulationsForPaths()
@@ -125,7 +127,26 @@ void Network::loadDataCenters()
     }
 
     file.close();
-     
+}
+
+void Network::loadContiguousLinksOfNodes(unsigned int amountOfNodes)
+{
+    nodes.resize(amountOfNodes);
+    for (size_t node = 0; node < listOfLinksFromNodes.size(); node++)
+    {
+        for (size_t linkId = 0; linkId < links.size(); linkId++)
+        {
+            if (links[linkId].sourceNode == node)
+            {
+                listOfLinksFromNodes[node].push_back(linkId);
+            }
+
+            if (links[linkId].destinationNode == node)
+            {
+                listOfLinksToNodes[node].push_back(linkId);
+            }
+        }
+    }
 }
 
 unsigned int Network::getAmountOfLinks() const
@@ -140,7 +161,7 @@ unsigned int Network::getAmountOfPaths() const
 
 unsigned int Network::getAmountOfNodes() const
 {
-    return amountOfNodes;
+    return listOfLinksFromNodes.size();
 }
 
 unsigned int Network::getAmountOfDataCenters() const

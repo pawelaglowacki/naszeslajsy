@@ -41,7 +41,8 @@ int main()
         for (CodeName codeName: codeNames)
         {
             NetworkOptimization networkOptimization(codeName);
-            //networkOptimization.printPathsWithLinks();
+            networkOptimization.printPathsWithLinks();
+            return 0;
         }
     }
     catch (string exception)

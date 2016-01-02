@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <list>
 
 struct Link
 {
@@ -18,6 +19,8 @@ class Network
         std::vector< int > distancesOfPaths;
         std::vector< int > modulationsOfPaths;
         std::vector< Link > links;
+        std::vector< std::list < int > > listOfLinksFromNodes;
+        std::vector< std::list < int > > listOfLinksToNodes;
         std::map<int, bool> dataCenters;
 
         void load(CodeName codeName); 
@@ -27,10 +30,9 @@ class Network
         unsigned int getAmountOfDataCenters() const;
     private:
         CodeName codeName;
-        unsigned int amountOfNodes;
         void loadCandidatePaths();
         void loadNetworkTopology();
         void loadDistancesAndModulationsForPaths();
         void loadDataCenters();
-        
+        void loadContiguousLinksOfNodes(unsigned int amountOfNodes);
 };

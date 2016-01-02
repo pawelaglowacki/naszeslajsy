@@ -13,4 +13,8 @@ class NetworkOptimization
     private:
         Network network;
         Traffic traffic;
+        const double pheromoneValue = 0.20;
+        std::vector < Ant > ants;
+        std::vector < double > pheromones;
+        void createStructureForPheromones()
 };
