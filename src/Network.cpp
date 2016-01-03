@@ -13,34 +13,6 @@ void Network::load(CodeName codeName)
     loadDataCenters();
 }
 
-void Network::loadCandidatePaths()
-{
-    string fileName = pathToDirWithFiles + codeName.ofPaths + ".pat";
-    
-    ifstream file;
-    file.open(fileName.c_str());
-    if (!file.is_open()) throw string(fileName + " does not exist");
-    
-    int amountOfPaths;
-    file >> amountOfPaths;
-    paths.resize(amountOfPaths);
-
-    int isActive;
-    for(unsigned int nrOfPath = 0; nrOfPath < getAmountOfPaths(); nrOfPath++)
-    {
-        for(unsigned int link = 0; link < getAmountOfLinks(); link++)
-        {
-            file >> isActive;
-            if(isActive)
-            {
-                paths[nrOfPath].push_back(link);
-            }
-        }
-    }
-
-    file.close();
-}
-
 void Network::loadNetworkTopology()
 {
     unsigned int amountOfLinks, amountOfNodes;
@@ -64,6 +36,7 @@ void Network::loadNetworkTopology()
             if(distanceOfLink)
             {
                 Link link;
+                link.linkId = numberOfLink;
                 link.sourceNode = i;
                 link.destinationNode = j;
                 link.distance = distanceOfLink;
@@ -78,7 +51,39 @@ void Network::loadNetworkTopology()
     if (numberOfLink != amountOfLinks)
         throw string("Different number of links");
 
-    loadContiguousLinksOfNodes(amountOfNodes);
+    loadNodes(amountOfNodes);
+}
+
+
+void Network::loadCandidatePaths()
+{
+    string fileName = pathToDirWithFiles + codeName.ofPaths + ".pat";
+    
+    ifstream file;
+    file.open(fileName.c_str());
+    if (!file.is_open()) throw string(fileName + " does not exist");
+    
+    int amountOfPaths;
+    file >> amountOfPaths;
+    paths.resize(amountOfPaths);
+
+    int isActive;
+    for(unsigned int nrOfPath = 0; nrOfPath < getAmountOfPaths(); nrOfPath++)
+    {
+        Path path;
+        path.pathId = nrOfPath;
+        for(unsigned int linkId = 0; linkId < getAmountOfLinks(); linkId++)
+        {
+            file >> isActive;
+            if(isActive)
+            {
+                path.links.push_back(&links[linkId]);
+            }
+        }
+        paths[nrOfPath] = path;
+    }
+
+    file.close();
 }
 
 void Network::loadDistancesAndModulationsForPaths()
@@ -101,8 +106,8 @@ void Network::loadDistancesAndModulationsForPaths()
 
     for(unsigned int i=0; i<amountOfPaths; i++)
     {
-        file >> distancesOfPaths[i];
-        file >> modulationsOfPaths[i];
+        file >> paths[i].distance;
+        file >> paths[i].modulation;
     }
 
     file.close();
@@ -123,30 +128,38 @@ void Network::loadDataCenters()
     {
         int node;
         file >> node;
-        dataCenters[node] = true;
+        nodes[node].isDataCenter = true;
     }
 
     file.close();
 }
 
-void Network::loadContiguousLinksOfNodes(unsigned int amountOfNodes)
+void Network::loadNodes(unsigned int amountOfNodes)
 {
-    nodes.resize(amountOfNodes);
-    for (size_t node = 0; node < listOfLinksFromNodes.size(); node++)
+    for (size_t i = 0; i < amountOfNodes; i++)
     {
-        for (size_t linkId = 0; linkId < links.size(); linkId++)
-        {
-            if (links[linkId].sourceNode == node)
-            {
-                listOfLinksFromNodes[node].push_back(linkId);
-            }
+        Node node;
+        node.nodeId = i;
+        nodes.push_back(node);
+        findContiguousLinksOfNode(i);
+    }
+}
 
-            if (links[linkId].destinationNode == node)
-            {
-                listOfLinksToNodes[node].push_back(linkId);
-            }
+void Network::findContiguousLinksOfNode(int node)
+{
+    for (size_t linkId = 0; linkId < links.size(); linkId++)
+    {
+        if (links[linkId].sourceNode == node)
+        {
+            nodes[node].neighborLinksFromNode.push_back(&links[linkId]);
+        }
+
+        if (links[linkId].destinationNode == node)
+        {
+            nodes[node].neighborLinksToNode.push_back(&links[linkId]);
         }
     }
+    
 }
 
 unsigned int Network::getAmountOfLinks() const
@@ -161,10 +174,6 @@ unsigned int Network::getAmountOfPaths() const
 
 unsigned int Network::getAmountOfNodes() const
 {
-    return listOfLinksFromNodes.size();
+    return nodes.size();
 }
 
-unsigned int Network::getAmountOfDataCenters() const
-{
-    return dataCenters.size();
-}
