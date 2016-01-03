@@ -101,9 +101,6 @@ void Network::loadDistancesAndModulationsForPaths()
         throw string("Different amount of paths in '" + fileName + "' file(" + to_string(amountOfPaths) + "). Should be " + to_string(getAmountOfPaths()) + ".");    
     }
     
-    distancesOfPaths.resize(amountOfPaths);
-    modulationsOfPaths.resize(amountOfPaths);                            
-
     for(unsigned int i=0; i<amountOfPaths; i++)
     {
         file >> paths[i].distance;
@@ -145,7 +142,7 @@ void Network::loadNodes(unsigned int amountOfNodes)
     }
 }
 
-void Network::findContiguousLinksOfNode(int node)
+void Network::findContiguousLinksOfNode(unsigned int node)
 {
     for (size_t linkId = 0; linkId < links.size(); linkId++)
     {

@@ -27,7 +27,7 @@ struct Node
     std::list < Link * > neighborLinksFromNode;
     std::list < Link * > neighborLinksToNode;
     bool isDataCenter;
-}
+};
 
 class Network
 {
@@ -35,12 +35,6 @@ class Network
         std::vector< Link > links;
         std::vector< Node > nodes;
         std::vector< Path > paths;
-      //  std::vector< std::vector< int > > paths;
-       // std::vector< int > distancesOfPaths;
-       // std::vector< int > modulationsOfPaths;
- //       std::vector< std::list < int > > listOfLinksFromNodes;
-   //     std::vector< std::list < int > > listOfLinksToNodes;
-     //   std::map<int, bool> dataCenters;
 
         void load(CodeName codeName); 
         unsigned int getAmountOfLinks() const;
@@ -53,5 +47,5 @@ class Network
         void loadDistancesAndModulationsForPaths();
         void loadDataCenters();
         void loadNodes(unsigned int amountOfNodes);
-        void findContiguousLinksOfNode(int node);
+        void findContiguousLinksOfNode(unsigned int node);
 };

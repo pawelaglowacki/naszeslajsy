@@ -42,7 +42,8 @@ int main()
         {
             const int numberOfAnts = 40;
             NetworkOptimization networkOptimization(codeName, numberOfAnts);
-            networkOptimization.printPathsWithLinks();
+            //networkOptimization.printPathsWithLinks();
+            networkOptimization.runUnicastDemands();
             return 0;
         }
     }

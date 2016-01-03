@@ -1,5 +1,4 @@
 #include "NetworkOptimization.hpp"
-#include "Ant.hpp"
 #include <iostream>
 #include <algorithm>
 #include <string>
@@ -29,17 +28,16 @@ void NetworkOptimization::createStructureForPheromones()
 {
     unsigned int amountOfLinks = network.getAmountOfLinks();
     pheromones.resize(amountOfLinks);
-    occupiedSlicesOnLinks.resize(amountOfLinks);
 }
 
 void NetworkOptimization::cleanStructureForPheromones()
 {
-    pheromones.clean();
-    occupiedSlicesOnLinks.clean();
-    requiredSlicesOnPaths.clean();
+    pheromones.clear();
+    //occupiedSlicesOnLinks.clean();
+    requiredSlicesOnPaths.clear();
 }
 
-int NetworkOptimization::calculateRequiredSlices(vector < Path * > * paths, unsigned int volume)
+void NetworkOptimization::calculateRequiredSlices(vector < Path * > * paths, unsigned int volume)
 {
     for (Path *path: *paths)
     {
@@ -52,20 +50,19 @@ vector <Path * > NetworkOptimization::findCandidatePaths(unsigned int srcNode, u
 {
     vector < Path * > foundPaths = findPathsStartingWithNode(srcNode);
     storeOnlyPathsEndingOnNode(&foundPaths, dstNode);
-    calculateRequiredSlices(foundPaths, volume);
-    storePathsHaveFullfilledSlices(foundPaths);//todo: delete paths which has no range of required slices
+    calculateRequiredSlices(&foundPaths, volume);
     return foundPaths; // todo: remember to check exception!!
 }
 
 vector < Path * > NetworkOptimization::findPathsStartingWithNode(unsigned int node)
 {
     vector < Path * > foundPaths;
-    for (Path *path: network.paths)
+    for (Path &path: network.paths)
     {
-        Link firstLink = *(path->links.front());
+        Link firstLink = *(path.links.front());
         
         if (firstLink.sourceNode == node)
-            foundPaths.push_back(path);   
+            foundPaths.push_back(&path);   
     }
     if (foundPaths.empty())
         throw string("There are no paths for demand (source node issue)");
@@ -77,7 +74,7 @@ void NetworkOptimization::storeOnlyPathsEndingOnNode(vector< Path * > * paths, u
 {
     for (size_t i=0; i<paths->size(); i++)
     {
-        Link lastLink = *(paths[i]->links.back());
+        Link lastLink = *(paths->at(i)->links.back());
         if (lastLink.destinationNode != node)
             paths->erase(paths->begin() + i);
     }
@@ -91,7 +88,7 @@ void NetworkOptimization::crossPaths(vector< Path *>  paths, Ant &ant)
     
     for (Path *path: paths)
     {
-        int continuityOccupiedSlices = ant.goThroughPath(path); // represented in bits
+        int continuityOccupiedSlices = ant.goThroughPath(path, maxBitOfPaths); // represented in bits
         int numberOfOccupiedSlices = howManySlices(continuityOccupiedSlices);
         double pheromonesOnPath = howMuchPheromonesOnPath(path);
         double costFunction = calculateCostFunction(numberOfOccupiedSlices, pheromonesOnPath);
@@ -99,10 +96,10 @@ void NetworkOptimization::crossPaths(vector< Path *>  paths, Ant &ant)
     }
 
     int bestPathId = chooseBestPathBasedOnCostFunction(costFunctionsForPaths);
-    releasePheromones(*paths[bestPathId]);
+    releasePheromones(paths[bestPathId]);
 }
 
-int NetworkOptimization::chooseBestPathBasedOnCostFunction(vector <double> costFunctionsForPaths)
+int NetworkOptimization::chooseBestPathBasedOnCostFunction(vector <double>& costFunctionsForPaths)
 {
     double maxCostFunction=0;
     int pathId;
@@ -117,17 +114,17 @@ int NetworkOptimization::chooseBestPathBasedOnCostFunction(vector <double> costF
     return pathId;
 }
 
-double NetworkOptimization::howMuchPheromonesOnPath(vector <Link *> *path)
+double NetworkOptimization::howMuchPheromonesOnPath(Path *path)
 {
     double sumOfPheromones=0;
-    for (Link *link: *path)
+    for (Link *link: path->links)
     {
         sumOfPheromones += pheromones[link->linkId];   
     }
     return sumOfPheromones;
 }
 
-double NetworkOptimization::calculateCostFunction(unsigned int numberOfOccupiedSlices, pheromonesOnPath)
+double NetworkOptimization::calculateCostFunction(unsigned int numberOfOccupiedSlices, double pheromonesOnPath)
 {
     uniform_real_distribution<double> unif(0,1);
     default_random_engine re;
@@ -137,9 +134,9 @@ double NetworkOptimization::calculateCostFunction(unsigned int numberOfOccupiedS
     return result;
 }
 
-void NetworkOptimization::releasePheromones(vector <Link *> path)
+void NetworkOptimization::releasePheromones(Path *path)
 {
-    for (Link *link: path)
+    for (Link *link: path->links)
     {
         pheromones[link->linkId] += pheromoneValue;
     }
@@ -150,13 +147,13 @@ void NetworkOptimization::runAnts(unsigned int sourceNode, unsigned int destinat
 
     vector < Path * > paths = findCandidatePaths(sourceNode, destinationNode, volume);
 
-    for (int i = 0; i<numberOfAnts; i++)
+    for (unsigned int i = 0; i<numberOfAnts; i++)
     {
         try
         {
             ants.push_back(Ant(occupiedSlicesOnLinks));
             Ant &ant = ants.back();
-            crossPaths(paths, ant, demand);
+            crossPaths(paths, ant);
         }
         catch (string fail)
         {
@@ -170,18 +167,21 @@ void NetworkOptimization::runAnts(unsigned int sourceNode, unsigned int destinat
 
 void NetworkOptimization::runUnicastDemands()
 {
+    occupiedSlicesOnLinks.resize(network.getAmountOfLinks());
+    maxBitOfSlicesOnLinks.resize(network.getAmountOfLinks());
     for (UnicastDemand &demand: traffic.unicastDemands)
     {
         createStructureForPheromones(); 
-        runAnts(demand.sourceNode, demand.destinationNode);
+        runAnts(demand.sourceNode, demand.destinationNode, demand.volume);
         cleanStructureForPheromones();
     }
 }
 
 void NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> paths)
 {
-    maxNumberOfPheromones=0;
-    Path *bestPath=nullptr;
+    double maxNumberOfPheromones=0;
+    int bestPathId=0;
+    int i=0;
     for (Path *path: paths)
     {
         double sumOfPheromones;
@@ -189,12 +189,30 @@ void NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> pat
         if (sumOfPheromones > maxNumberOfPheromones)
         {
             maxNumberOfPheromones = sumOfPheromones;
-            bestPath = path;
+            bestPathId = i;
         }
+        i++;
     }
 
     if (maxNumberOfPheromones)
-        occuppySlicesOnLinks //todo: to continue
+    {
+        int maxBitOfPath=0;
+        for (Link *link: paths[bestPathId]->links)
+        {
+            int maxBitOfLink = maxBitOfSlicesOnLinks[link->linkId];
+            if ( maxBitOfLink > maxBitOfPath)
+                maxBitOfPath = maxBitOfLink;
+        }
+
+        for (Link *link: paths[bestPathId]->links)
+        {
+            for (int j=0; j < requiredSlicesOnPaths[bestPathId]; j++)
+                occupiedSlicesOnLinks[link->linkId] |= maxBitOfPath+1+j;
+            
+            maxBitOfSlicesOnLinks[link->linkId] = maxBitOfPath+requiredSlicesOnPaths[bestPathId];
+        }
+        maxBitOfPaths = maxBitOfPath + requiredSlicesOnPaths[bestPathId];
+    }
 }
 
 int NetworkOptimization::howManySlices(int slicesInBits)
@@ -209,3 +227,4 @@ int NetworkOptimization::howManySlices(int slicesInBits)
         }
     }
     return counter;
+}

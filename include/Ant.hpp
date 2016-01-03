@@ -5,7 +5,7 @@ class Ant
 {
     public:
         Ant(std::vector <int> &occupiedSlicesOnLinks);
-        int goThroughPath(Path &path);
+        int goThroughPath(Path *path, unsigned int maxNumberOfSlices);
         void setActive(bool verdict);
         bool getActive();
     private:

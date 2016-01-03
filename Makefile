@@ -7,8 +7,8 @@ obj:
 clean:
 	rm -r obj RSA_Optimization
 
-RSA_Optimization: obj/main.o obj/Network.o obj/NetworkOptimization.o obj/Traffic.o
-	g++ obj/main.o obj/Network.o obj/Traffic.o obj/NetworkOptimization.o -o RSA_Optimization
+RSA_Optimization: obj/main.o obj/Network.o obj/NetworkOptimization.o obj/Traffic.o obj/Ant.o
+	g++ obj/main.o obj/Ant.o obj/Network.o obj/Traffic.o obj/NetworkOptimization.o -o RSA_Optimization
 
 obj/main.o: main.cpp
 	g++ -Iinclude -Wall -pedantic -std=c++11  -c -o obj/main.o main.cpp
@@ -22,3 +22,5 @@ obj/NetworkOptimization.o: src/NetworkOptimization.cpp
 obj/Network.o: src/Network.cpp
 	g++ -Iinclude -Wall -pedantic -std=c++11 -c -o obj/Network.o src/Network.cpp
 
+obj/Ant.o: src/Ant.cpp
+	g++ -Iinclude -Wall -pedantic -std=c++11 -c -o obj/Ant.o src/Ant.cpp
