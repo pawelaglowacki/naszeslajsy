@@ -105,6 +105,7 @@ int NetworkOptimization::chooseBestPathBasedOnCostFunction(vector <double>& cost
     int pathId;
     for(unsigned int i=0; i<costFunctionsForPaths.size(); i++)
     {
+       // cout << "Path " << i << " has costFunctions " << costFunctionsForPaths[i] << endl;
         if(costFunctionsForPaths[i] > maxCostFunction)
         {
             maxCostFunction = costFunctionsForPaths[i];
@@ -126,7 +127,7 @@ double NetworkOptimization::howMuchPheromonesOnPath(Path *path)
 
 double NetworkOptimization::calculateCostFunction(unsigned int numberOfOccupiedSlices, double pheromonesOnPath)
 {
-    uniform_real_distribution<double> unif(0,1);
+    uniform_real_distribution<double> unif(0,5);
     default_random_engine re;
     double randomValue = unif(re);
     double result = ((1/exp(numberOfOccupiedSlices))+1) * (pheromonesOnPath+1) * (1+randomValue);
@@ -142,11 +143,21 @@ void NetworkOptimization::releasePheromones(Path *path)
     }
 }
 
+void NetworkOptimization::disspatePheromones()
+{
+    for (double &pheromone: pheromones)
+    {
+        if (pheromone < pheromoneDisspate)
+            pheromone = 0;
+        else
+            pheromone -= pheromoneDisspate;
+    }
+}
+
 void NetworkOptimization::runAnts(unsigned int sourceNode, unsigned int destinationNode, unsigned int volume)
 {
 
     vector < Path * > paths = findCandidatePaths(sourceNode, destinationNode, volume);
-
     for (unsigned int i = 0; i<numberOfAnts; i++)
     {
         try
@@ -160,7 +171,7 @@ void NetworkOptimization::runAnts(unsigned int sourceNode, unsigned int destinat
             cout << "Could not find path for demand << " << fail << endl;
             return;
         }
-        //todo: after each iteration do updatePheromones
+        disspatePheromones();
     }
     selectTheBestPathBasedOnPheromones(paths);
 }
@@ -175,6 +186,20 @@ void NetworkOptimization::runUnicastDemands()
         runAnts(demand.sourceNode, demand.destinationNode, demand.volume);
         cleanStructureForPheromones();
     }
+
+    printStatistics();
+}
+
+void NetworkOptimization::printStatistics()
+{
+    int globalMaxBit=0;
+    for (int maxBit: maxBitOfSlicesOnLinks)
+    {
+        if (maxBit > globalMaxBit)
+            globalMaxBit = maxBit;
+    }
+
+    cout << "The result is " << globalMaxBit << endl;
 }
 
 void NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> paths)
@@ -186,6 +211,7 @@ void NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> pat
     {
         double sumOfPheromones;
         sumOfPheromones = howMuchPheromonesOnPath(path);
+        //cout << "Path number " << path->pathId << " has " << sumOfPheromones << " pheromones." << endl;
         if (sumOfPheromones > maxNumberOfPheromones)
         {
             maxNumberOfPheromones = sumOfPheromones;

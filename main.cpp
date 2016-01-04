@@ -40,7 +40,7 @@ int main()
         vector <CodeName> codeNames = testAlgorithm("euro16_k2.txt");
         for (CodeName codeName: codeNames)
         {
-            const int numberOfAnts = 40;
+            const int numberOfAnts = 100;
             NetworkOptimization networkOptimization(codeName, numberOfAnts);
             //networkOptimization.printPathsWithLinks();
             networkOptimization.runUnicastDemands();
