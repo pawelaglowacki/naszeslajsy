@@ -118,7 +118,6 @@ void Network::loadDataCenters()
     file.open(fileName.c_str());
     if (!file.is_open()) throw string(fileName + " does not exist");
 
-    unsigned int numberOfReplicas;
     file >> numberOfReplicas;
     
     for(unsigned int i=0; i<numberOfReplicas; i++)
@@ -174,3 +173,7 @@ unsigned int Network::getAmountOfNodes() const
     return nodes.size();
 }
 
+unsigned int Network::getAmountOfDataCenters() const
+{
+    return numberOfReplicas;
+}

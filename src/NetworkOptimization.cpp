@@ -243,7 +243,6 @@ void NetworkOptimization::runUnicastDemands()
         cleanStructureForPheromones();
     }
 
-    printStatistics();
 }
 
 void NetworkOptimization::printStatistics()
@@ -254,8 +253,10 @@ void NetworkOptimization::printStatistics()
         if (maxBit > globalMaxBit)
             globalMaxBit = maxBit;
     }
-
-    cout << "The result is " << globalMaxBit << endl;
+    cout << network.getAmountOfDataCenters() << " data centers." << endl;
+    cout << traffic.getAmountOfUnicastDemands() << " unicast demands." << endl;
+    cout << traffic.getAmountOfAnycastDemands() << " anycast demands." << endl;
+    cout << "The result " << globalMaxBit << " slices allocated." << endl;
 }
 
 int NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> paths)

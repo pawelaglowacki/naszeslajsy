@@ -40,8 +40,10 @@ class Network
         unsigned int getAmountOfLinks() const;
         unsigned int getAmountOfPaths() const;
         unsigned int getAmountOfNodes() const;
+        unsigned int getAmountOfDataCenters() const;
     private:
         CodeName codeName;
+        unsigned int numberOfReplicas;
         void loadCandidatePaths();
         void loadNetworkTopology();
         void loadDistancesAndModulationsForPaths();

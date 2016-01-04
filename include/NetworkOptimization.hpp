@@ -19,6 +19,7 @@ class NetworkOptimization
         void printPathsWithLinks() const;
         void runUnicastDemands();
         void runAnycastDemands();
+        void printStatistics();
     private:
         Network network;
         Traffic traffic;
@@ -33,7 +34,6 @@ class NetworkOptimization
         std::vector < double > pheromones; // local for one demand
         std::vector < int > requiredSlicesOnPaths; // local for one demand
         void createStructureForPheromones();
-        void printStatistics();
         void cleanStructureForPheromones();
         void disspatePheromones();
         void runAnts(unsigned int sourceNode, unsigned int destinationNode, unsigned int volume);

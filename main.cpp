@@ -1,10 +1,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ctime>
 #include "NetworkOptimization.hpp"
 #include "Definitions.hpp"
 using namespace std;
-
+#define SPECIFIC_SET 3
 
 vector <CodeName> testAlgorithm(string nameOfTestingFile)
 {
@@ -19,8 +20,8 @@ vector <CodeName> testAlgorithm(string nameOfTestingFile)
     {
         string pattern;
         file >> pattern;
-        
         CodeName codeName;
+        codeName.pattern = pattern;
         codeName.ofNetworkTopology = pattern.substr(0, 2);
         codeName.ofUnicastDemands = pattern.substr(2, 2);
         codeName.ofAnycastDemands = pattern.substr(4, 2);
@@ -37,14 +38,33 @@ int main()
 {
     try
     {
-        vector <CodeName> codeNames = testAlgorithm("euro16_k2.txt");
-        for (CodeName codeName: codeNames)
+        vector <string> scenarios {"euro16_k2.txt", "euro16_k3.txt", "euro16_k5.txt", "euro16_k10.txt", "euro16_k30.txt"};
+        for (string scenario: scenarios)
         {
-            const int numberOfAnts = 100;
-            NetworkOptimization networkOptimization(codeName, numberOfAnts);
-            //networkOptimization.printPathsWithLinks();
-            networkOptimization.runUnicastDemands();
-            return 0;
+            cout << "Scenario " << scenario << endl;
+            vector <CodeName> codeNames = testAlgorithm(scenario);
+#if SPECIFIC_SET 
+            CodeName codeName = codeNames[SPECIFIC_SET];
+#else
+            for (CodeName codeName: codeNames)
+            {
+#endif
+                const int numberOfAnts = 100;
+                cout << "Codename " << codeName.pattern << endl;
+                NetworkOptimization networkOptimization(codeName, numberOfAnts);
+                clock_t begin = clock();
+                //networkOptimization.printPathsWithLinks();
+                networkOptimization.runUnicastDemands();
+                networkOptimization.runAnycastDemands();
+                clock_t end = clock();
+                double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+                cout << "Elapsed " << elapsed_secs << " seconds." << endl;
+                networkOptimization.printStatistics();
+                cout << endl;
+#ifndef SPECIFIC_SET
+            }
+#endif
+
         }
     }
     catch (string exception)
