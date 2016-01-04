@@ -144,7 +144,7 @@ void NetworkOptimization::crossPaths(vector< Path *>  paths, Ant &ant)
     
     for (Path *path: paths)
     {
-        int continuityOccupiedSlices = ant.goThroughPath(path, maxBitOfPaths); // represented in bits
+        int continuityOccupiedSlices = ant.goThroughPath(path); // represented in bits
         int numberOfOccupiedSlices = howManySlices(continuityOccupiedSlices);
         double pheromonesOnPath = howMuchPheromonesOnPath(path);
         double costFunction = calculateCostFunction(numberOfOccupiedSlices, pheromonesOnPath);
@@ -278,27 +278,56 @@ int NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> path
     int dst=0;
     if (maxNumberOfPheromones)
     {
-     //   int continuitySlices = findContinuitySlicesForPath(paths[bestPathId]);
-
-        int maxBitOfPath=0;
-        for (Link *link: paths[bestPathId]->links)
-        {
-            int maxBitOfLink = maxBitOfSlicesOnLinks[link->linkId];
-            if ( maxBitOfLink > maxBitOfPath)
-                maxBitOfPath = maxBitOfLink;
-        }
+        int requiredSlices = requiredSlicesOnPaths[bestPathId];
+        int continuitySlices = findContinuitySlicesOnPath(paths[bestPathId]);
+        int startingSlice = findFreeSlices(continuitySlices, requiredSlices);
+        
 
         for (Link *link: paths[bestPathId]->links)
         {
             for (int j=0; j < requiredSlicesOnPaths[bestPathId]; j++)
-                occupiedSlicesOnLinks[link->linkId] |= maxBitOfPath+1+j;
+                occupiedSlicesOnLinks[link->linkId] |= startingSlice+j;
             
-            maxBitOfSlicesOnLinks[link->linkId] = maxBitOfPath+requiredSlicesOnPaths[bestPathId];
+            maxBitOfSlicesOnLinks[link->linkId] = startingSlice+requiredSlicesOnPaths[bestPathId];
             dst = link->destinationNode;
         }
-        maxBitOfPaths = maxBitOfPath + requiredSlicesOnPaths[bestPathId];
+        maxBitOfPaths = startingSlice + requiredSlicesOnPaths[bestPathId];
     }
     return dst;
+}
+
+int NetworkOptimization::findFreeSlices(int continuitySlices, int requiredSlices)
+{
+    int startingSlice=0;
+    int counter=0;
+
+    for (unsigned int i=0; i < maxBitOfPaths+requiredSlices; i++)
+    {
+        int slice = 1 < i;
+
+        if ((continuitySlices & slice ) == 0)
+        {
+            if (counter == 0)
+            {
+                startingSlice=i;
+            }
+            counter++;
+            if (counter == requiredSlices)
+                break;
+        }
+    }
+
+    return startingSlice;
+}
+
+int NetworkOptimization::findContinuitySlicesOnPath(Path *path)
+{
+    int continuitySlices = occupiedSlicesOnLinks[path->links.front()->linkId];
+    for (Link *link: path->links)
+    {
+        continuitySlices &= occupiedSlicesOnLinks[link->linkId];   
+    }
+    return continuitySlices;
 }
 
 int NetworkOptimization::howManySlices(int slicesInBits)
