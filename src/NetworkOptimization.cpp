@@ -10,6 +10,62 @@ NetworkOptimization::NetworkOptimization(CodeName codeName, unsigned int numberO
     traffic.load(codeName);
 }
 
+int NetworkOptimization::runAntsAnycast(unsigned int sourceNode, vector<int> destinationNodes, unsigned int volume)
+{
+
+    vector < Path * > paths;
+    vector < Path * > tmpPaths;
+    for(int DC : destinationNodes)
+    {
+        tmpPaths = findCandidatePaths(sourceNode, DC, volume);
+        paths.insert(paths.end() , tmpPaths.begin() , tmpPaths.end());
+        // zasysa wszystkie mozliwe sciezki do datacenterow
+    }
+
+    for (unsigned int i = 0; i<numberOfAnts; i++)
+    {
+        try
+        {
+            ants.push_back(Ant(occupiedSlicesOnLinks));
+            Ant &ant = ants.back();
+            crossPaths(paths, ant);
+        }
+        catch (string fail)
+        {
+            cout << "Could not find path for demand << " << fail << endl;
+            return 0;
+        }
+        //todo: after each iteration do updatePheromones
+    }
+    int dst =  selectTheBestPathBasedOnPheromones(paths);
+// tutaj jest juz zdeterminowany data center
+    return dst; // nr data centera
+}
+
+void NetworkOptimization::runAnycastDemands()//p
+{
+    occupiedSlicesOnLinks.resize(network.getAmountOfLinks());
+    maxBitOfSlicesOnLinks.resize(network.getAmountOfLinks());
+
+    vector <int> dataCenters;
+
+    for(Node dC : network.nodes)
+    {
+        if(dC.isDataCenter)
+            dataCenters.push_back(dC.nodeId);
+    }
+
+    int selectedDatacenter = 0;
+
+    for (AnycastDemand &demand: traffic.anycastDemands)
+    {
+        createStructureForPheromones();
+        selectedDatacenter = runAntsAnycast(demand.node, dataCenters, demand.upstream); // zamiast destination node jest kilka destination nodes
+        runAnts(selectedDatacenter, demand.node, demand.downstream);
+        cleanStructureForPheromones();
+    }
+}
+
 void NetworkOptimization::printPathsWithLinks() const
 {
     for (unsigned int i=0; i < network.getAmountOfPaths(); i++)
@@ -202,7 +258,7 @@ void NetworkOptimization::printStatistics()
     cout << "The result is " << globalMaxBit << endl;
 }
 
-void NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> paths)
+int NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> paths)
 {
     double maxNumberOfPheromones=0;
     int bestPathId=0;
@@ -219,9 +275,11 @@ void NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> pat
         }
         i++;
     }
-
+    int dst=0;
     if (maxNumberOfPheromones)
     {
+     //   int continuitySlices = findContinuitySlicesForPath(paths[bestPathId]);
+
         int maxBitOfPath=0;
         for (Link *link: paths[bestPathId]->links)
         {
@@ -236,9 +294,11 @@ void NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> pat
                 occupiedSlicesOnLinks[link->linkId] |= maxBitOfPath+1+j;
             
             maxBitOfSlicesOnLinks[link->linkId] = maxBitOfPath+requiredSlicesOnPaths[bestPathId];
+            dst = link->destinationNode;
         }
         maxBitOfPaths = maxBitOfPath + requiredSlicesOnPaths[bestPathId];
     }
+    return dst;
 }
 
 int NetworkOptimization::howManySlices(int slicesInBits)

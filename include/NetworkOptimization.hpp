@@ -18,6 +18,7 @@ class NetworkOptimization
         NetworkOptimization(CodeName codeName, unsigned int numberOfAnts); 
         void printPathsWithLinks() const;
         void runUnicastDemands();
+        void runAnycastDemands();
     private:
         Network network;
         Traffic traffic;
@@ -36,6 +37,7 @@ class NetworkOptimization
         void cleanStructureForPheromones();
         void disspatePheromones();
         void runAnts(unsigned int sourceNode, unsigned int destinationNode, unsigned int volume);
+        int runAntsAnycast(unsigned int sourceNode, std::vector<int> destinationNodes, unsigned int volume);
         std::vector <Path *> findCandidatePaths(unsigned int srcNode, unsigned int dstNode, unsigned int volume); 
         std::vector < Path * > findPathsStartingWithNode(unsigned int node);
         void storeOnlyPathsEndingOnNode(std::vector< Path * > * paths, unsigned int node);
@@ -46,5 +48,5 @@ class NetworkOptimization
         int chooseBestPathBasedOnCostFunction(std::vector <double>& costFunctionsForPaths);
         void releasePheromones(Path * path);
         void crossPaths(std::vector< Path *>  paths, Ant &ant);
-        void selectTheBestPathBasedOnPheromones(std::vector< Path *> paths);
+        int selectTheBestPathBasedOnPheromones(std::vector< Path *> paths);
 };
