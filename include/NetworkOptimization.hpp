@@ -39,8 +39,6 @@ class NetworkOptimization
         void runAnts(unsigned int sourceNode, unsigned int destinationNode, unsigned int volume);
         int runAntsAnycast(unsigned int sourceNode, std::vector<int> destinationNodes, unsigned int volume);
         std::vector <Path *> findCandidatePaths(unsigned int srcNode, unsigned int dstNode, unsigned int volume); 
-        std::vector < Path * > findPathsStartingWithNode(unsigned int node);
-        void storeOnlyPathsEndingOnNode(std::vector< Path * > * paths, unsigned int node);
         void calculateRequiredSlices(std::vector < Path * > * paths, unsigned int volume);
         int howManySlices(int slicesInBits);
         int findContinuitySlicesOnPath(Path *path);

@@ -2,7 +2,6 @@
 #include <string>
 
 const std::string pathToDirWithFiles = "data/";
-const int maxNumberOfSlicesPerLink = 20;
 
 struct CodeName
 {

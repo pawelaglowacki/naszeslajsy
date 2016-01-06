@@ -4,7 +4,7 @@
 #include <string>
 #include <random>
 using namespace std;
-NetworkOptimization::NetworkOptimization(CodeName codeName, unsigned int numberOfAnts): numberOfAnts(numberOfAnts)
+NetworkOptimization::NetworkOptimization(CodeName codeName, unsigned int numberOfAnts): numberOfAnts(numberOfAnts), maxBitOfPaths(0)
 {
     network.load(codeName);
     traffic.load(codeName);
@@ -104,38 +104,26 @@ void NetworkOptimization::calculateRequiredSlices(vector < Path * > * paths, uns
 
 vector <Path * > NetworkOptimization::findCandidatePaths(unsigned int srcNode, unsigned int dstNode, unsigned int volume)
 {
-    vector < Path * > foundPaths = findPathsStartingWithNode(srcNode);
-    storeOnlyPathsEndingOnNode(&foundPaths, dstNode);
-    calculateRequiredSlices(&foundPaths, volume);
-    return foundPaths; // todo: remember to check exception!!
-}
-
-vector < Path * > NetworkOptimization::findPathsStartingWithNode(unsigned int node)
-{
     vector < Path * > foundPaths;
-    for (Path &path: network.paths)
-    {
-        Link firstLink = *(path.links.front());
-        
-        if (firstLink.sourceNode == node)
-            foundPaths.push_back(&path);   
-    }
-    if (foundPaths.empty())
-        throw string("There are no paths for demand (source node issue)");
-    
-    return foundPaths;
-}
 
-void NetworkOptimization::storeOnlyPathsEndingOnNode(vector< Path * > * paths, unsigned int node)
-{
-    for (size_t i=0; i<paths->size(); i++)
+    unsigned int amountOfNodes = network.getAmountOfNodes();
+    unsigned int amountOfNodesWithoutOne = amountOfNodes-1;
+    unsigned int amountOfCandidatePaths = network.getAmountOfPaths()/amountOfNodesWithoutOne/amountOfNodes;
+    int numOfPath = amountOfCandidatePaths * (srcNode*amountOfNodesWithoutOne + dstNode);
+
+    if (dstNode>srcNode)
+        numOfPath = amountOfCandidatePaths * (srcNode*amountOfNodesWithoutOne + dstNode - 1);
+
+    for (unsigned int i=0; i < amountOfCandidatePaths; i++)
     {
-        Link lastLink = *(paths->at(i)->links.back());
-        if (lastLink.destinationNode != node)
-            paths->erase(paths->begin() + i);
+        for (Path &path: network.paths)
+        {
+            if (path.pathId == (numOfPath+i))
+                foundPaths.push_back(&path);
+        }
     }
-    if (paths->empty())
-        throw string("There are no paths for demand (destination node issue)");
+    calculateRequiredSlices(&foundPaths, volume);
+    return foundPaths;
 }
 
 void NetworkOptimization::crossPaths(vector< Path *>  paths, Ant &ant)
@@ -292,7 +280,7 @@ int NetworkOptimization::selectTheBestPathBasedOnPheromones(vector< Path *> path
             maxBitOfSlicesOnLinks[link->linkId] = startingSlice+requiredSlicesOnPaths[bestPathId];
             dst = link->destinationNode;
         }
-        maxBitOfPaths = startingSlice + requiredSlicesOnPaths[bestPathId];
+        maxBitOfPaths += startingSlice + requiredSlicesOnPaths[bestPathId];
     }
     return dst;
 }
@@ -334,7 +322,7 @@ int NetworkOptimization::findContinuitySlicesOnPath(Path *path)
 int NetworkOptimization::howManySlices(int slicesInBits)
 {
     int counter = 0;
-    for (unsigned int i=0; i < maxNumberOfSlicesPerLink; i++)
+    for (unsigned int i=0; i < maxBitOfPaths; i++)
     {
         int slice = 1 << i;
         if (slicesInBits & slice)
